@@ -3,14 +3,29 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "hardhat/console.sol";
+
+interface IFactory {
+    function getExchange(address _tokenAddress) external returns (address);
+}
+
+interface IExchange {
+    function ethToTokenSwap(uint256 _minTokens) external payable;
+
+    function ethToTokenTransfer(uint256 _minTokens, address _recipient)
+    external
+    payable;
+}
 
 contract Exchange  is ERC20{
     address public tokenAddress;
+    address public factoryAddress;
 
     constructor(address _token) ERC20("LP SWAP token", "LP-SWAP"){
         require(_token != address(0), "invalid token address");
 
         tokenAddress = _token;
+        factoryAddress = msg.sender;
     }
     // @dev the amount of LP-tokens issued equals to the amount of ethers deposited.
     function addLiquidity(uint256 _tokenAmount) public payable  returns(uint256){
@@ -103,9 +118,8 @@ contract Exchange  is ERC20{
 
         return getAmount(_tokenSold, tokenReserve, address(this).balance);
     }
-
-    // @dev swap from ETH to token, amount of token must greater then _mintokens
-    function ethToTokenSwap(uint256 _minTokens) public payable {
+    // @dev: send token to user directly, not cost gas
+    function ethToToken(uint256 _minTokens, address recipient) private {
         uint256 tokenReserve = getReserve();
         uint256 tokensBought = getAmount(
             msg.value,
@@ -114,8 +128,13 @@ contract Exchange  is ERC20{
         );
 
         require(tokensBought >= _minTokens, "insufficient output amount");
-        // It's Ok, transfer token to requester
-        IERC20(tokenAddress).transfer(msg.sender, tokensBought);
+        // It's Ok, transfer token to recipient
+        IERC20(tokenAddress).transfer(recipient, tokensBought);
+    }
+
+    // @dev swap from ETH to token, amount of token must greater then _mintokens
+    function ethToTokenSwap(uint256 _minTokens) public payable {
+        ethToToken(_minTokens, msg.sender);
     }
 
     // @dev swap token to ETH, bought ETH must be greater than _minEth
@@ -132,5 +151,48 @@ contract Exchange  is ERC20{
         // Then, send eth to requester
         IERC20(tokenAddress).transferFrom(msg.sender, address(this), _tokensSold);
         payable(msg.sender).transfer(ethBought);
+    }
+
+    // @dev
+    // @_tokensSold: the amount of tokens to be sold
+    // @_minTokensBought minimal amount of tokens to get in exchange
+    // @_tokenAddress the address of the token to exchange sold tokens for.
+    function tokenToTokenSwap(
+        uint256 _tokensSold,
+        uint256 _minTokensBought,
+        address _tokenAddress
+    ) public {
+        address exchangeAddress = IFactory(factoryAddress).getExchange(
+            _tokenAddress
+        );
+        require(
+            exchangeAddress != address(this) && exchangeAddress != address(0),
+            "invalid exchange address"
+        );
+        // we’re using the current exchange to swap tokens for ethers and transfer user’s tokens to the exchange.
+        // This is the standard procedure of ether-to-tokens swapping:
+        uint256 tokenReserve = getReserve();
+        uint256 ethBought = getAmount(
+            _tokensSold,
+            tokenReserve,
+            address(this).balance
+        );
+
+        IERC20(tokenAddress).transferFrom(
+            msg.sender,
+            address(this),
+            _tokensSold
+        );
+        IExchange(exchangeAddress).ethToTokenTransfer{value: ethBought}(
+            _minTokensBought,
+            msg.sender
+        );
+    }
+    // @dev:
+    function ethToTokenTransfer(uint256 _minTokens, address _recipient)
+    public
+    payable
+    {
+        ethToToken(_minTokens, _recipient);
     }
 }
