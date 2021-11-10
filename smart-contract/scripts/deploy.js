@@ -18,9 +18,13 @@ async function main() {
 
     const createExchangeXTx = await factory.createExchange(tokenX.address);
     await createExchangeXTx.wait();     // wait until the transaction is mined
+    const addressExchangeTokenX = await factory.getExchange(tokenX.address);
+    console.log("Exchange X deployed to:", addressExchangeTokenX);
 
     const createExchangeYTx = await factory.createExchange(tokenY.address);
     await createExchangeYTx.wait();     // wait until the transaction is mined
+    const addressExchangeTokenY = await factory.getExchange(tokenY.address);
+    console.log("Exchange Y deployed to:", addressExchangeTokenY);
 }
 
 main()

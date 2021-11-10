@@ -150,6 +150,7 @@ contract Exchange  is ERC20{
         // It's Ok, transfer token from requester to Exchange contract
         // Then, send eth to requester
         IERC20(tokenAddress).transferFrom(msg.sender, address(this), _tokensSold);
+        // Method send eth - transfer can throw exception if fail
         payable(msg.sender).transfer(ethBought);
     }
 
