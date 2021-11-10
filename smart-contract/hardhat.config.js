@@ -20,6 +20,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 module.exports = {
   networks: {
     hardhat: {
+      chainId: 1337,
       accounts: {
         accountsBalance: utils.parseEther("1000000").toString(),
       },

@@ -9,7 +9,7 @@ Try running some of the following tasks:
 
 ```shell
 npx hardhat node
-node scripts/deploy.js
+npx hardhat run scripts/deploy.js --network localhost
 ```
 
 

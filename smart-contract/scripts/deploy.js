@@ -25,6 +25,19 @@ async function main() {
     await createExchangeYTx.wait();     // wait until the transaction is mined
     const addressExchangeTokenY = await factory.getExchange(tokenY.address);
     console.log("Exchange Y deployed to:", addressExchangeTokenY);
+
+    // Make liquidity
+    // Transfer TTX to Exchange
+    // const exchangeX = await factory.getExchange(tokenX.address);
+    // await tokenX.approve(addressExchangeTokenX, toWei(2000));
+    // await exchangeX.addLiquidity(toWei(2000), { value: toWei(1000) });
+
+
+    //Testing with greeting contract
+    const Greeting = await hre.ethers.getContractFactory("Greeting");
+    const greeting = await Greeting.deploy("First contract deployment!");
+    await greeting.deployed();
+    console.log("Contract Greeting deployed to: ", greeting.address);
 }
 
 main()
