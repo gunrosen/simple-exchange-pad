@@ -1,4 +1,20 @@
 const hre = require("hardhat");
+const {ethers} = require("ethers");
+const EXCHANGE = require("../artifacts/contracts/Exchange.sol/Exchange.json")
+
+const toWei = (value) => ethers.utils.parseEther(value.toString());
+
+const fromWei = (value) =>
+    ethers.utils.formatEther(
+        typeof value === "string" ? value : value.toString()
+    );
+
+async function createTestGreetingContract(){
+    const Greeting = await hre.ethers.getContractFactory("Greeting");
+    const greeting = await Greeting.deploy("First contract deployment!");
+    await greeting.deployed();
+    console.log("Contract Greeting deployed to: ", greeting.address);
+}
 
 async function main() {
     const TokenX = await hre.ethers.getContractFactory("Token");
@@ -26,18 +42,8 @@ async function main() {
     const addressExchangeTokenY = await factory.getExchange(tokenY.address);
     console.log("Exchange Y deployed to:", addressExchangeTokenY);
 
-    // Make liquidity
-    // Transfer TTX to Exchange
-    // const exchangeX = await factory.getExchange(tokenX.address);
-    // await tokenX.approve(addressExchangeTokenX, toWei(2000));
-    // await exchangeX.addLiquidity(toWei(2000), { value: toWei(1000) });
-
-
     //Testing with greeting contract
-    const Greeting = await hre.ethers.getContractFactory("Greeting");
-    const greeting = await Greeting.deploy("First contract deployment!");
-    await greeting.deployed();
-    console.log("Contract Greeting deployed to: ", greeting.address);
+    // await createTestGreetingContract();
 }
 
 main()

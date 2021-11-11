@@ -1,5 +1,6 @@
 require("@nomiclabs/hardhat-waffle");
 const { expect } = require("chai");
+const { ethers } = require("hardhat");
 
 const toWei = (value) => ethers.utils.parseEther(value.toString());
 
@@ -100,8 +101,6 @@ describe("Exchange", () => {
         it("removes some liquidity", async () => {
             const userEtherBalanceBefore = await getBalance(owner.address);
             const userTokenBalanceBefore = await token.balanceOf(owner.address);
-            console.log('userEtherBalanceBefore: ',userEtherBalanceBefore.toString()  );
-            console.log('userTokenBalanceBefore: ',userTokenBalanceBefore.toString()  );
             expect(await exchange.balanceOf(owner.address)).to.eq(toWei(100));
             const userLP = await exchange.balanceOf(owner.address);
             console.log('userLP: ',userLP.toString()  );
