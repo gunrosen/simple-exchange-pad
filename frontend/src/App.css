@@ -1,38 +1,186 @@
-.App {
-  text-align: center;
+html{
+  background-color: rgb(33, 36, 41);
 }
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+svg{
+  vertical-align: baseline;
 }
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+#root{
+  background-color: rgb(33, 36, 41);
 }
+.swap{
+  position: relative;
+  max-width: 480px;
+  width: 100%;
+  background: rgb(25, 27, 31);
+  border-radius: 24px;
+  margin-top: 10rem;
+  margin-left: auto;
+  margin-right: auto;
+  z-index: 1;
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+}
+.swap-title{
+  padding: 1rem 1.25rem 0.5rem;
+  width: 100%;
+  color: rgb(195, 197, 203);
+}
+.swap-area{
+  position: relative;
+  padding: 8px;
+}
+.swap-grid{
+  display: grid;
+  grid-auto-rows: auto;
+  row-gap: 8px;
+}
+.swap-from {
   display: flex;
-  flex-direction: column;
+  flex-flow: column nowrap;
+  position: relative;
+  border-radius: 20px;
+  background-color: rgb(44, 47, 54);
+  z-index: 1;
+  width: initial;
+}
+.swap-holder{
+  border-radius:20px;
+  border: 1px solid rgb(44,47,54);
+  background-color: rgb(33,36,41);
+  width: initial;
+}
+.swap-holder:hover{
+  border: 1px solid rgb(99,99,99);
+}
+.swap-holder-place{
+  display: flex;
+  flex-flow: row nowrap;
+  -webkit-box-align: center;
   align-items: center;
+  -webkit-box-pack: justify;
+  justify-content: space-between;
+  padding: 1rem 1rem 0.75rem;
+}
+.open-currency-select-button{
+  visibility: visible;
+  -webkit-box-align: center;
+  align-items: center;
+  font-size: 24px;
+  font-weight: 500;
+  background-color: rgb(25, 27, 31);
+  color: rgb(255, 255, 255);
+  border-radius: 16px;
+  box-shadow: rgb(0, 0, 0 / 8) 0px 6px 10px;
+  outline: none;
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  height: 2.4rem;
+  width: initial;
+  padding: 0px 8px;
+  -webkit-box-pack: justify;
+  justify-content: space-between;
+  margin-right: 12px;
+}
+.swap-left{
+    display: flex;
+    -webkit-box-align: center;
+    align-items: center;
+    -webkit-box-pack: justify;
+    justify-content: space-between;
+    width: 100%;
+    user-select: none;
+}
+.swap-left-currency{
+  display: flex;
+  width: fit-content;
+  padding: 0px;
+  -webkit-box-align: center;
+  align-items: center;
+  -webkit-box-pack: start;
+  justify-content: flex-start;
+}
+.currency-icon{
+  width: 24px;
+  height: 24px;
+  border-radius: 24px;
+}
+.currency-code{
+  margin: 0px 0.25rem;
+  font-size: 18px;
+}
+.icon-down{
+  margin: 0px 0.25px 0px 0.35px;
+  height: 35%;
+}
+.swap-amount-input{
+  color: rgb(255, 255, 255);
+  width: 0px;
+  position: relative;
+  font-weight: 500;
+  outline: none;
+  border: none;
+  flex: 1 1 auto;
+  background-color: rgb(33, 36, 41);
+  font-size: 24px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0px;
+  appearance: textfield;
+  text-align: right;
+  filter: none;
+  opacity: 1;
+  transition: opacity 0.2s ease-in-out 0s;
+}
+.swap-break{
+  padding: 4px;
+  border-radius: 12px;
+  height: 32px;
+  width: 32px;
+  position: relative;
+  margin-top: -14px;
+  margin-bottom: -14px;
+  left: calc(50% - 16px);
+  background-color: rgb(33, 36, 41);
+  border: 4px solid rgb(25, 27, 31);
+  z-index: 2;
+}
+
+.background-page{
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  width: 200vw;
+  height: 200vh;
+  background: radial-gradient(50% 50% at 50% 50%,#fc077d10 0,rgba(255,255,255,0) 100%);
+  transform: translate(-50vw,-100vh);
+  z-index: -1;
+}
+
+.swap-button{
+  background-color: rgba(21, 61, 111, 0.44);
+  color: rgb(80, 144, 234);
+  font-size: 16px;
+  font-weight: 500;
+  padding: 16px;
+  width: 100%;
+  text-align: center;
+  border-radius: 20px;
+  outline: none;
+  border: 1px solid transparent;
+  text-decoration: none;
+  display: flex;
+  -webkit-box-pack: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  flex-wrap: nowrap;
+  -webkit-box-align: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  will-change: transform;
+  transition: transform 450ms ease 0s;
+  transform: perspective(1px) translateZ(0px);
 }
