@@ -6,7 +6,7 @@ const XImage = "https://gemini.com/images/currencies/icons/default/zrx.svg"
 
 const YImage= "https://gemini.com/images/currencies/icons/default/1inch.svg"
 
-const Constants = [
+const Coins = [
     {
         name: "Ether",
         abbr: "ETH",
@@ -29,4 +29,4 @@ const Constants = [
 
 
 
-export {Constants, FactoryAddress , EtherImage ,XImage, YImage};
+export {Coins, FactoryAddress , EtherImage ,XImage, YImage};
