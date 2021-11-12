@@ -16,6 +16,7 @@ describe("Simple Exchange", () => {
     let user;
     let simpleExchange;
     let token;
+    let tokenY;
 
     beforeEach(async () => {
         // owner is set as accounts[0]
@@ -23,8 +24,12 @@ describe("Simple Exchange", () => {
         [owner, user] = await ethers.getSigners();
 
         const Token = await ethers.getContractFactory("Token");
-        token = await Token.deploy("Token", "TKN", toWei(1000));
+        token = await Token.deploy("TokenX", "TTX", toWei(1000));
         await token.deployed();
+
+        const TokenY = await ethers.getContractFactory("Token");
+        tokenY = await TokenY.deploy("TokenY", "TTY", toWei(1000));
+        await tokenY.deployed();
 
         const SimpleExchange = await ethers.getContractFactory("SimpleExchange");
         simpleExchange = await SimpleExchange.deploy();
@@ -36,9 +41,10 @@ describe("Simple Exchange", () => {
 
     it("is deployed", async () => {
         expect(await simpleExchange.deployed()).to.equal(simpleExchange);
+
         expect(await token.deployed()).to.equal(token);
-        expect(await token.name()).to.equal("Token");
-        expect(await token.symbol()).to.equal("TKN");
+        expect(await token.name()).to.equal("TokenX");
+        expect(await token.symbol()).to.equal("TTX");
         expect(await token.totalSupply()).to.equal(toWei(1000));
         expect(await token.balanceOf(owner.address)).to.equal(toWei(1000));
     });
@@ -61,17 +67,24 @@ describe("Simple Exchange", () => {
             expect(tokenRate.decimal).to.equal(10);
         })
 
-        describe("set up simple DEX", async () => {
+        describe("DEX exchange", async () => {
             beforeEach(async () => {
                 await simpleExchange.upsertTokenRate(token.address, 25, 5);
                 await token.transfer(user.address, toWei(400));
                 await token.transfer(simpleExchange.address, toWei(400));
+
+                await tokenY.transfer(user.address, toWei(400));
+                await tokenY.transfer(simpleExchange.address, toWei(400));
             })
 
-            it("set up OK", async () => {
+            it("DEX setup OK", async () => {
                 expect(await token.balanceOf(owner.address)).to.equal(toWei(200));
                 expect(await token.balanceOf(simpleExchange.address)).to.equal(toWei(400))
                 expect(await token.balanceOf(user.address)).to.equal(toWei(400));
+
+                expect(await tokenY.balanceOf(owner.address)).to.equal(toWei(200));
+                expect(await tokenY.balanceOf(simpleExchange.address)).to.equal(toWei(400))
+                expect(await tokenY.balanceOf(user.address)).to.equal(toWei(400));
             })
 
             describe("user exchange token to ETH", async () => {
@@ -95,6 +108,36 @@ describe("Simple Exchange", () => {
                     expect(await token.balanceOf(user.address)).to.equal(toWei(400 + 48));
 
                     expect(await getBalance(simpleExchange.address)).to.equal(toWei(100 + 0.012));
+                })
+            })
+
+            describe("user exchange from token to token", async ()=>{
+                let tokenRateY;
+                beforeEach(async () => {
+                    await simpleExchange.upsertTokenRate(token.address, 25, 5);     // x = 0.00025 ETH
+                    await simpleExchange.upsertTokenRate(tokenY.address, 62, 4);    // y = 0.0062 ETH
+                    tokenRate = await simpleExchange.getTokenRate(token.address);
+                    tokenRateY = await simpleExchange.getTokenRate(tokenY.address);
+                })
+
+                it('check updated token rates ', async () => {
+                    tokenRate = await simpleExchange.getTokenRate(token.address);
+                    tokenRateY = await simpleExchange.getTokenRate(tokenY.address);
+                    expect(tokenRate.value).to.equal(25);
+                    expect(tokenRate.decimal).to.equal(5);
+                    expect(tokenRateY.value).to.equal(62);
+                    expect(tokenRateY.decimal).to.equal(4);
+                });
+
+                it('user exchange from 200 tokenX to 8.06451612903 tokenY', async () => {
+                    await token.connect(user).approve(simpleExchange.address, toWei(200));
+                    await simpleExchange.connect(user).tokenToTokenSwap(token.address, tokenY.address,  toWei(200));
+
+                    expect(await token.balanceOf(owner.address)).to.equal(toWei(200));
+                    expect(await token.balanceOf(simpleExchange.address)).to.equal(toWei(600));
+                    expect(await token.balanceOf(user.address)).to.equal(toWei(200));
+
+                    expect(await tokenY.balanceOf(owner.address)).to.equal(toWei(200));
                 })
             })
         });

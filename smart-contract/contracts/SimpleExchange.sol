@@ -12,8 +12,8 @@ contract SimpleExchange is Ownable {
     // Rate to native coin
     // token / eth = value/ decimal
     struct Rate {
-        uint value;
-        uint decimal;
+        uint256 value;
+        uint256 decimal;
     }
 
     mapping(address => Rate) public tokenRate;
@@ -41,12 +41,13 @@ contract SimpleExchange is Ownable {
         uint256 allowance = IERC20(_tokenAddress).allowance(msg.sender, address(this));
         require(allowance >= _tokensSold, "SimpleExchange: Please check the token allowance");
         uint256 _ethBought = _tokensSold  * tokenRate[_tokenAddress].value / (10 ** tokenRate[_tokenAddress].decimal);
+        console.log("_ethBought",_ethBought);
 
         IERC20(_tokenAddress).transferFrom(msg.sender, address(this), _tokensSold);
         payable(msg.sender).transfer(_ethBought);
     }
 
-    //@dev: user request to exchange from ETH to token
+    // @dev: user request to exchange from ETH to token
     function ethToToken(address _tokenAddress) public payable {
         require(_tokenAddress != address(0), "SimpleExchange: address of token not valid");
         require(msg.value > 0, "SimpleExchange: You need to sell at least some ethers");
@@ -56,5 +57,30 @@ contract SimpleExchange is Ownable {
         uint256 dexBalance = IERC20(_tokenAddress).balanceOf(address(this));
         require(_tokenBought <= dexBalance, "SimpleExchange: DEX Not enough tokens in the reserve");
         IERC20(_tokenAddress).transfer(msg.sender, _tokenBought);
+    }
+
+    // @dev: swap token to token
+    function tokenToTokenSwap(address _tokenFrom, address _tokenTo, uint256 _amountFrom) public payable {
+        require(_tokenFrom != address(0), "SimpleExchange: address of From token not valid");
+        require(_tokenTo != address(0), "SimpleExchange: address of To token not valid");
+        require(_amountFrom > 0, "SimpleExchange: You need to sell at least some tokens");
+        require(tokenRate[_tokenFrom].value > 0 && tokenRate[_tokenFrom].decimal > 0, "SimpleExchange: can not get rate of From token");
+        require(tokenRate[_tokenTo].value > 0 && tokenRate[_tokenTo].decimal > 0, "SimpleExchange: can not get rate of To token");
+        console.log("_amountFrom",_amountFrom);
+
+        uint256 rateTo = tokenRate[_tokenTo].value.div(10 ** tokenRate[_tokenTo].decimal);
+        uint256 rateFrom = tokenRate[_tokenFrom].value.div(10 ** tokenRate[_tokenFrom].decimal);
+        console.log("rateTo",rateTo);
+        console.log("rateFrom",rateFrom);
+        uint256 _tokenBought = _amountFrom * (tokenRate[_tokenFrom].value * 10 ** tokenRate[_tokenTo].decimal) / (tokenRate[_tokenTo].value * 10 ** tokenRate[_tokenFrom].decimal) ;
+        uint256 dexToTokenBalance = IERC20(_tokenTo).balanceOf(address(this));
+
+        console.log("_amountFrom:",_amountFrom);
+        console.log("_tokenBought:",_tokenBought);
+        console.log("dexToTokenBalance:",dexToTokenBalance);
+        require(_tokenBought <= dexToTokenBalance, "SimpleExchange: DEX Not enough tokens in the reserve");
+
+        IERC20(_tokenFrom).transferFrom(msg.sender, address(this), _amountFrom);
+        IERC20(_tokenTo).transfer(msg.sender, _tokenBought);
     }
 }
