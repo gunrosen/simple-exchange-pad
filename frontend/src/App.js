@@ -1,44 +1,126 @@
-import {useState} from 'react';
-import {ethers} from 'ethers';
+import {useEffect, useState} from 'react';
+import {ethers, Wallet} from 'ethers';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
-import {Button, Navbar, Container, Row, Col, Image} from "react-bootstrap";
+import cloneDeep from 'lodash/cloneDeep';
+import {Button, Navbar, Container, Image} from "react-bootstrap";
 import {IconDown, IconSwap, Logo} from "./components/Images";
-import {Coins, EtherImage} from "./constants/constants";
-import {Modal} from "bootstrap";
+import {
+    ADDRESS_SIMPLE_EXCHANGE,
+    ADDRESS_TOKEN_X,
+    ADDRESS_TOKEN_Y,
+    Coins,
+    USER_PRIVATE_KEY
+} from "./constants/constants";
 import ModalCurrency from "./components/ModalCurrency";
-import use from "use";
-import {getProvider} from "./ethereumFunctions";
+import TokenContract from "./artifacts/contracts/Token.sol/Token.json";
+import SimpleExchangeContract from "./artifacts/contracts/SimpleExchange.sol/SimpleExchange.json";
 
+/*
+tokenX deployed to: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+tokenY deployed to: 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
+SimpleExchange deployed to: 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
+ */
 
 function App() {
-    const [isConnected, setIsConnected] = useState(true);
+    const [currentAccount, setCurrentAccount] = useState({address: '', balanceETH: 0});
+    const [rateX, setRateX] = useState(0);
+    const [rateY, setRateY] = useState(0);
 
-    const [currentBalance, setCurrentBalance] = useState(0);
     const [fromToken, setFromToken] = useState(Coins[0]);
     const [toToken, setToToken] = useState(Coins[1]);
-    const [fromAmount, setFromAmount] = useState(0);
-    const [toAmount, setToAmount] = useState(0);
+    const [fromAmount, setFromAmount] = useState('')
+    const [toAmount, setToAmount] = useState('');
 
     const [openModal, setOpenModal] = useState(false);
     const [modalForFromToken, setModalForFromToken] = useState(null);
     const [alreadySetCurrency, setAlreadySetCurrency] = useState(null);
 
+    const provider = new ethers.providers.JsonRpcProvider();
+
+    useEffect(async () => {
+        const simpleExchangeContract = new ethers.Contract(ADDRESS_SIMPLE_EXCHANGE, SimpleExchangeContract.abi, provider);
+        const rateX = await simpleExchangeContract.getTokenRate(ADDRESS_TOKEN_X);
+        setRateX(rateX.value * (10 ** (-1 * rateX.decimal)));
+        const rateY = await simpleExchangeContract.getTokenRate(ADDRESS_TOKEN_Y);
+        setRateY(rateY.value * (10 ** (-1 * rateY.decimal)));
+    }, []);
+
+    useEffect(() => {
+        updateAmount(fromAmount);
+    },[fromToken, toToken]);
+
     const handleConnectWallet = async (e) => {
-        e.preventDefault();
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const [userAddress] = await window.ethereum.request({method: 'eth_requestAccounts'});
+        console.log(userAddress);
+        const balance = await provider.getBalance(userAddress);
+        const ethFormat = ethers.utils.formatEther(balance)
+        setCurrentAccount({address: userAddress, balanceETH: ethFormat});
+
     }
-    const handleSwap = () => {
+
+    const handleSwap = async (e) => {
+        e.preventDefault();
+        const wallet = new Wallet(USER_PRIVATE_KEY, provider);
+        const simpleExchangeContract = new ethers.Contract(ADDRESS_SIMPLE_EXCHANGE, SimpleExchangeContract.abi, wallet);
+
+        if (fromToken.abbr === 'ETH') {
+            // Incase: from ETH to tokens
+            await simpleExchangeContract.connect(wallet)
+                .ethToToken(toToken.address, {value: ethers.utils.parseEther(fromAmount).toString()});
+        } else if (toToken.abbr === 'ETH'){
+            await  simpleExchangeContract.connect(wallet)
+                .tokenToETH(fromToken.address,fromAmount);
+        }
+
 
     };
+    //TODO: refactor
+    const calculateToAmount = (valueFrom) => {
+        if (fromToken.abbr === 'ETH') {
+            if (toToken.abbr === 'TXX') {
+                return valueFrom / rateX;
+            } else if (toToken.abbr === 'TYY') {
+                return valueFrom / rateY;
+            }
+        } else if (fromToken.abbr === 'TXX') {
+            if (toToken.abbr === 'ETH') {
+                return valueFrom * rateX;
+            } else if (toToken.abbr === 'TYY') {
+                return valueFrom * rateX / rateY;
+            }
+        } else if (fromToken.abbr === 'TYY') {
+            if (toToken.abbr === 'ETH') {
+                return valueFrom * rateY;
+            } else if (toToken.abbr === 'TXX') {
+                return valueFrom * rateY / rateX;
+            }
+        }
+        return 0;
+    }
+    const updateAmount = (value) => {
+        if (value.match("^[0-9]*[.]?[0-9]*$")) {
+            const valueFrom = Number(value);
+            const valueTo = calculateToAmount(valueFrom);
+            setFromAmount(value);
+            setToAmount(valueTo);
+        }
+    }
 
-    const handleFromAmountChange = () => {}
+    const handleFromAmountChange = (e) => {
+        e.preventDefault();
+        const value = e.target.value;
+        updateAmount(value);
+    }
 
-    const handleToAmountChange = () => {}
+    const handleToAmountChange = (e) => {
+        e.preventDefault();
+        setToAmount(e.target.value);
+    }
 
     const handleOpenModal = (e, isFromAmount) => {
         e.preventDefault();
-        const alreadyCurrency = isFromAmount ? fromToken : toToken;
+        const alreadyCurrency = isFromAmount ? toToken : fromToken;
         setAlreadySetCurrency(alreadyCurrency);
         setModalForFromToken(isFromAmount);
         setOpenModal(true);
@@ -48,13 +130,18 @@ function App() {
     }
 
     const handleSelectCurrency = (item) => {
-        if (modalForFromToken){
+        if (modalForFromToken) {
             setFromToken(item);
         } else {
             setToToken(item);
         }
     }
-
+    const handleRevertToken = () =>{
+        const tempFromToken = cloneDeep(fromToken);
+        const tempToToken = cloneDeep(toToken);
+        setFromToken(tempToToken);
+        setToToken(tempFromToken);
+    }
 
     return <>
         <Navbar bg="dark" variant="dark">
@@ -64,10 +151,17 @@ function App() {
                     {' '}
                     HomeSwap
                 </Navbar.Brand>
-                <Button variant="outline-primary">Connect Wallet</Button>
+                {
+                    currentAccount && currentAccount.address !== '' ?
+                        <div style={{color: 'white', height: '100%'}}>
+                            <div>{currentAccount.address}</div>
+                            <div><span>{currentAccount.balanceETH} ETH</span></div>
+                        </div> :
+                        <Button variant="outline-primary" onClick={handleConnectWallet}>Connect Wallet</Button>
+                }
+
             </Container>
         </Navbar>
-        <div>{getProvider().getBalance('0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc')}</div>
         <ModalCurrency show={openModal}
                        setShow={setOpenModal}
                        handleSelectCurrency={handleSelectCurrency}
@@ -83,8 +177,9 @@ function App() {
                     <div>
                         <div className="swap-from">
                             <div className="swap-holder">
-                                    <div className="swap-holder-place">
-                                        <button className="open-currency-select-button" onClick={(e) => handleOpenModal(e,true)}>
+                                <div className="swap-holder-place">
+                                    <button className="open-currency-select-button"
+                                            onClick={(e) => handleOpenModal(e, true)}>
                                             <span className="swap-left">
                                                 <div className="swap-left-currency">
                                                     <Image src={fromToken.image} alt="ether" className="currency-icon"/>
@@ -93,23 +188,23 @@ function App() {
                                                 </div>
                                                 <IconDown className="icon-down"/>
                                             </span>
-                                        </button>
-                                        <input className="swap-amount-input"
-                                               onChange={handleFromAmountChange}
-                                               value={ethers.utils.parseEther(fromAmount.toString(10))}
-                                               inputMode="decimal" autoComplete="off" autoCorrect="off" type="text"
-                                               pattern="^[0-9]*[.,]?[0-9]*$"
-                                               placeholder="0.0" minLength={1} maxLength={79} spellCheck={false}/>
-                                    </div>
+                                    </button>
+                                    <input className="swap-amount-input"
+                                           onChange={handleFromAmountChange}
+                                           value={fromAmount}
+                                           inputMode="decimal" autoComplete="off" autoCorrect="off" type="text"
+                                           placeholder="0.0" minLength={1} maxLength={18} spellCheck={false}/>
+                                </div>
                             </div>
                         </div>
-                        <div className="swap-break">
-                            <IconSwap />
+                        <div className="swap-break" onClick={handleRevertToken}>
+                            <IconSwap/>
                         </div>
                         <div className="swap-from">
                             <div className="swap-holder">
                                 <div className="swap-holder-place">
-                                    <button className="open-currency-select-button"  onClick={(e) => handleOpenModal(e,false)}>
+                                    <button className="open-currency-select-button"
+                                            onClick={(e) => handleOpenModal(e, false)}>
                                             <span className="swap-left">
                                                 <div className="swap-left-currency">
                                                     <Image src={toToken.image} alt="ether" className="currency-icon"/>
@@ -120,8 +215,8 @@ function App() {
                                             </span>
                                     </button>
                                     <input className="swap-amount-input" inputMode="decimal" autoComplete="off"
-                                           autoCorrect="off" type="text" pattern="^[0-9]*[.,]?[0-9]*$"
-                                           placeholder="0.0" minLength={1} maxLength={79} spellCheck={false}
+                                           autoCorrect="off" type="text"
+                                           placeholder="0.0" minLength={1} maxLength={18}
                                            onChange={handleToAmountChange}
                                            value={toAmount}/>
                                 </div>
@@ -130,7 +225,7 @@ function App() {
                     </div>
                     <div>
                         {
-                            isConnected ?
+                            currentAccount.address ?
                                 <button className="swap-button" onClick={handleSwap}> SWAP</button>
                                 :
                                 <button className="swap-button" onClick={handleConnectWallet}> Connect Wallet</button>

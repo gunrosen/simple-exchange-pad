@@ -25,7 +25,7 @@ module.exports = {
     hardhat: {
       chainId: 1337,
       accounts: {
-        accountsBalance: utils.parseEther("1000000").toString(),
+        accountsBalance: utils.parseEther("10").toString(),
       },
       gasPrice: 1000,
       initialBaseFeePerGas: 0

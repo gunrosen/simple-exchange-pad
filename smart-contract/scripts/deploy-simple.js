@@ -25,15 +25,15 @@ async function main() {
     console.log("SimpleExchange deployed to:", simpleExchange.address);
 
     // Init exchanges rate
-    await simpleExchange.upsertTokenRate(tokenX.address, 25,5);
-    await simpleExchange.upsertTokenRate(tokenY.address, 62,4);
+    await simpleExchange.upsertTokenRate(tokenX.address, 2,2);
+    await simpleExchange.upsertTokenRate(tokenY.address, 3,1);
 
     // Init balance for user
     const [owner, user] = await  hre.ethers.getSigners();
     console.log("owner address", owner.address);
     console.log("user address", user.address);
 
-    await simpleExchange.receiveEth({ value: toWei(100) });
+    await simpleExchange.receiveEth({ value: toWei(5) });
     await tokenX.connect(owner).transfer(user.address, toWei(400));
     await tokenX.connect(owner).transfer(simpleExchange.address, toWei(400));
 
