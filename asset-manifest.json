@@ -1,25 +1,25 @@
 {
   "files": {
-    "main.css": "/simple-exchange-pad/static/css/main.34dcaf83.chunk.css",
-    "main.js": "/simple-exchange-pad/static/js/main.10349cf0.chunk.js",
-    "main.js.map": "/simple-exchange-pad/static/js/main.10349cf0.chunk.js.map",
-    "runtime-main.js": "/simple-exchange-pad/static/js/runtime-main.c04094d2.js",
-    "runtime-main.js.map": "/simple-exchange-pad/static/js/runtime-main.c04094d2.js.map",
+    "main.css": "/simple-exchange-pad/static/css/main.bb880090.chunk.css",
+    "main.js": "/simple-exchange-pad/static/js/main.b9898d4f.chunk.js",
+    "main.js.map": "/simple-exchange-pad/static/js/main.b9898d4f.chunk.js.map",
+    "runtime-main.js": "/simple-exchange-pad/static/js/runtime-main.2132aa15.js",
+    "runtime-main.js.map": "/simple-exchange-pad/static/js/runtime-main.2132aa15.js.map",
     "static/css/2.383c0125.chunk.css": "/simple-exchange-pad/static/css/2.383c0125.chunk.css",
-    "static/js/2.1bcf38b1.chunk.js": "/simple-exchange-pad/static/js/2.1bcf38b1.chunk.js",
-    "static/js/2.1bcf38b1.chunk.js.map": "/simple-exchange-pad/static/js/2.1bcf38b1.chunk.js.map",
-    "static/js/3.cd5bad81.chunk.js": "/simple-exchange-pad/static/js/3.cd5bad81.chunk.js",
-    "static/js/3.cd5bad81.chunk.js.map": "/simple-exchange-pad/static/js/3.cd5bad81.chunk.js.map",
+    "static/js/2.426e9a86.chunk.js": "/simple-exchange-pad/static/js/2.426e9a86.chunk.js",
+    "static/js/2.426e9a86.chunk.js.map": "/simple-exchange-pad/static/js/2.426e9a86.chunk.js.map",
+    "static/js/3.1d99c38b.chunk.js": "/simple-exchange-pad/static/js/3.1d99c38b.chunk.js",
+    "static/js/3.1d99c38b.chunk.js.map": "/simple-exchange-pad/static/js/3.1d99c38b.chunk.js.map",
     "index.html": "/simple-exchange-pad/index.html",
     "static/css/2.383c0125.chunk.css.map": "/simple-exchange-pad/static/css/2.383c0125.chunk.css.map",
-    "static/css/main.34dcaf83.chunk.css.map": "/simple-exchange-pad/static/css/main.34dcaf83.chunk.css.map",
-    "static/js/2.1bcf38b1.chunk.js.LICENSE.txt": "/simple-exchange-pad/static/js/2.1bcf38b1.chunk.js.LICENSE.txt"
+    "static/css/main.bb880090.chunk.css.map": "/simple-exchange-pad/static/css/main.bb880090.chunk.css.map",
+    "static/js/2.426e9a86.chunk.js.LICENSE.txt": "/simple-exchange-pad/static/js/2.426e9a86.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
-    "static/js/runtime-main.c04094d2.js",
+    "static/js/runtime-main.2132aa15.js",
     "static/css/2.383c0125.chunk.css",
-    "static/js/2.1bcf38b1.chunk.js",
-    "static/css/main.34dcaf83.chunk.css",
-    "static/js/main.10349cf0.chunk.js"
+    "static/js/2.426e9a86.chunk.js",
+    "static/css/main.bb880090.chunk.css",
+    "static/js/main.b9898d4f.chunk.js"
   ]
 }
