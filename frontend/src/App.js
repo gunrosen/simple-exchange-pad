@@ -37,9 +37,9 @@ function App() {
     const [errorMessage, setErrorMessage] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const provider = new ethers.providers.JsonRpcProvider();
 
     useEffect(async () => {
+        const provider = new ethers.providers.Web3Provider(window.ethereum)
         const simpleExchangeContract = new ethers.Contract(ADDRESS_SIMPLE_EXCHANGE, SimpleExchangeContract.abi, provider);
         const rateX = await simpleExchangeContract.getTokenRate(ADDRESS_TOKEN_X);
         setRateX(rateX.value * (10 ** (-1 * rateX.decimal)));
@@ -51,11 +51,18 @@ function App() {
         updateAmount(fromAmount);
     }, [fromToken, toToken]);
 
-    const handleConnectWallet = async (e) => {
+    useEffect(async () => {
+        if (!loading){
+            await handleConnectWallet();
+        }
+    }, [loading])
+
+    const handleConnectWallet = async () => {
         if (!window.ethereum) {
             setErrorMessage('ethereum wallet is not available');
             return;
         }
+        const provider = new ethers.providers.Web3Provider(window.ethereum)
         const [userAddress] = await window.ethereum.request({method: 'eth_requestAccounts'});
         console.log(userAddress);
         const balance = await provider.getBalance(userAddress);
@@ -70,8 +77,8 @@ function App() {
         setLoading(true);
         try {
             await window.ethereum.request({method: 'eth_requestAccounts'});
-            const provider = new ethers.providers.JsonRpcProvider();
-            const signer = provider.getSigner(1);
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
             const simpleExchangeContract = new ethers.Contract(ADDRESS_SIMPLE_EXCHANGE, SimpleExchangeContract.abi, signer);
 
             if (fromToken.abbr === 'ETH') {
