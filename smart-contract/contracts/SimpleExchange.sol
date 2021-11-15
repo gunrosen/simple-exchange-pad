@@ -80,6 +80,9 @@ contract SimpleExchange is Ownable {
         console.log("dexToTokenBalance:",dexToTokenBalance);
         require(_tokenBought <= dexToTokenBalance, "SimpleExchange: DEX Not enough tokens in the reserve");
 
+        uint256 allowance = IERC20(_tokenFrom).allowance(msg.sender, address(this));
+        console.log("allowance:",allowance);
+        require(_amountFrom <= allowance, "SimpleExchange: Allowance is not enough");
         IERC20(_tokenFrom).transferFrom(msg.sender, address(this), _amountFrom);
         IERC20(_tokenTo).transfer(msg.sender, _tokenBought);
     }

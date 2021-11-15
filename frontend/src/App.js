@@ -10,7 +10,6 @@ import {
     ADDRESS_TOKEN_X,
     ADDRESS_TOKEN_Y,
     Coins,
-    USER_PRIVATE_KEY
 } from "./constants/constants";
 import ModalCurrency from "./components/ModalCurrency";
 import TokenContract from "./artifacts/contracts/Token.sol/Token.json";
@@ -35,6 +34,8 @@ function App() {
     const [openModal, setOpenModal] = useState(false);
     const [modalForFromToken, setModalForFromToken] = useState(null);
     const [alreadySetCurrency, setAlreadySetCurrency] = useState(null);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const provider = new ethers.providers.JsonRpcProvider();
 
@@ -48,9 +49,13 @@ function App() {
 
     useEffect(() => {
         updateAmount(fromAmount);
-    },[fromToken, toToken]);
+    }, [fromToken, toToken]);
 
     const handleConnectWallet = async (e) => {
+        if (!window.ethereum) {
+            setErrorMessage('ethereum wallet is not available');
+            return;
+        }
         const [userAddress] = await window.ethereum.request({method: 'eth_requestAccounts'});
         console.log(userAddress);
         const balance = await provider.getBalance(userAddress);
@@ -61,22 +66,45 @@ function App() {
 
     const handleSwap = async (e) => {
         e.preventDefault();
-        const wallet = new Wallet(USER_PRIVATE_KEY, provider);
-        const simpleExchangeContract = new ethers.Contract(ADDRESS_SIMPLE_EXCHANGE, SimpleExchangeContract.abi, wallet);
+        setErrorMessage('');
+        setLoading(true);
+        try {
+            await window.ethereum.request({method: 'eth_requestAccounts'});
+            const provider = new ethers.providers.JsonRpcProvider();
+            const signer = provider.getSigner(1);
+            const simpleExchangeContract = new ethers.Contract(ADDRESS_SIMPLE_EXCHANGE, SimpleExchangeContract.abi, signer);
 
-        if (fromToken.abbr === 'ETH') {
-            // Incase: from ETH to tokens
-            await simpleExchangeContract.connect(wallet)
-                .ethToToken(toToken.address, {value: ethers.utils.parseEther(fromAmount).toString()});
-        } else if (toToken.abbr === 'ETH'){
-            await  simpleExchangeContract.connect(wallet)
-                .tokenToETH(fromToken.address,fromAmount);
+            if (fromToken.abbr === 'ETH') {
+                // Incase: from ETH to tokens
+                await simpleExchangeContract.connect(signer)
+                    .ethToToken(toToken.address, {value: ethers.utils.parseEther(fromAmount).toString()});
+            } else if (toToken.abbr === 'ETH') {
+                const tokenContract = new ethers.Contract(fromToken.abbr === 'TXX' ? ADDRESS_TOKEN_X : ADDRESS_TOKEN_Y, TokenContract.abi, provider);
+                await tokenContract.connect(signer).approve(simpleExchangeContract.address, ethers.utils.parseEther(fromAmount).toString());
+                await simpleExchangeContract.connect(signer)
+                    .tokenToETH(fromToken.address, ethers.utils.parseEther(fromAmount).toString());
+            } else {
+                const tokenContract = new ethers.Contract(fromToken.abbr === 'TXX' ? ADDRESS_TOKEN_X : ADDRESS_TOKEN_Y, TokenContract.abi, provider);
+                await tokenContract.connect(signer).approve(simpleExchangeContract.address, ethers.utils.parseEther(fromAmount).toString());
+                await simpleExchangeContract.connect(signer)
+                    .tokenToTokenSwap(fromToken.address, toToken.address, ethers.utils.parseEther(fromAmount).toString());
+            }
+        } catch (e) {
+            debugger;
+            if (e.body && JSON.parse(e.body)) {
+                const err = JSON.parse(e.body);
+                setErrorMessage(err.error.message);
+            } else {
+                setErrorMessage(e.message);
+            }
+        }finally
+        {
+            setLoading(false);
         }
-
-
     };
     //TODO: refactor
     const calculateToAmount = (valueFrom) => {
+        if (valueFrom === 0) return 0;
         if (fromToken.abbr === 'ETH') {
             if (toToken.abbr === 'TXX') {
                 return valueFrom / rateX;
@@ -125,9 +153,6 @@ function App() {
         setModalForFromToken(isFromAmount);
         setOpenModal(true);
     }
-    const handleCloseModal = () => {
-        setOpenModal(false);
-    }
 
     const handleSelectCurrency = (item) => {
         if (modalForFromToken) {
@@ -136,7 +161,7 @@ function App() {
             setToToken(item);
         }
     }
-    const handleRevertToken = () =>{
+    const handleRevertToken = () => {
         const tempFromToken = cloneDeep(fromToken);
         const tempToToken = cloneDeep(toToken);
         setFromToken(tempToToken);
@@ -226,12 +251,18 @@ function App() {
                     <div>
                         {
                             currentAccount.address ?
-                                <button className="swap-button" onClick={handleSwap}> SWAP</button>
+                                <button className="swap-button" disabled={loading} onClick={!loading ? handleSwap: null}> {loading ? 'SENDING' : 'SWAP'}</button>
                                 :
                                 <button className="swap-button" onClick={handleConnectWallet}> Connect Wallet</button>
                         }
 
                     </div>
+                </div>
+                <div>
+                    {
+                        errorMessage ?
+                            <label style={{color: 'red'}}> {errorMessage}</label> : ''
+                    }
                 </div>
             </div>
         </div>

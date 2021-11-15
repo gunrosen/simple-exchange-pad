@@ -27,7 +27,7 @@ module.exports = {
       accounts: {
         accountsBalance: utils.parseEther("100").toString(),
       },
-      gasPrice: 1000,
+      gasPrice: 0,
       initialBaseFeePerGas: 0
     },
   },
