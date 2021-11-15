@@ -1,15 +1,13 @@
 import {useEffect, useState} from 'react';
-import {ethers, Wallet} from 'ethers';
+import {ethers} from 'ethers';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 import cloneDeep from 'lodash/cloneDeep';
 import {Button, Navbar, Container, Image} from "react-bootstrap";
 import {IconDown, IconSwap, Logo} from "./components/Images";
+import TestRepstenInfo from "./components/TestRepstenInfo";
 import {
-    ADDRESS_SIMPLE_EXCHANGE,
-    ADDRESS_TOKEN_X,
-    ADDRESS_TOKEN_Y,
-    Coins,
+    Coins
 } from "./constants/constants";
 import ModalCurrency from "./components/ModalCurrency";
 import TokenContract from "./artifacts/contracts/Token.sol/Token.json";
@@ -39,12 +37,18 @@ function App() {
 
 
     useEffect(async () => {
-        const provider = new ethers.providers.Web3Provider(window.ethereum)
-        const simpleExchangeContract = new ethers.Contract(ADDRESS_SIMPLE_EXCHANGE, SimpleExchangeContract.abi, provider);
-        const rateX = await simpleExchangeContract.getTokenRate(ADDRESS_TOKEN_X);
-        setRateX(rateX.value * (10 ** (-1 * rateX.decimal)));
-        const rateY = await simpleExchangeContract.getTokenRate(ADDRESS_TOKEN_Y);
-        setRateY(rateY.value * (10 ** (-1 * rateY.decimal)));
+        try{
+            setErrorMessage('');
+            const provider = new ethers.providers.Web3Provider(window.ethereum)
+            const simpleExchangeContract = new ethers.Contract(process.env.REACT_APP_ADDRESS_SIMPLE_EXCHANGE, SimpleExchangeContract.abi, provider);
+            const rateX = await simpleExchangeContract.getTokenRate(process.env.REACT_APP_ADDRESS_TOKEN_X);
+            setRateX(rateX.value * (10 ** (-1 * rateX.decimal)));
+            const rateY = await simpleExchangeContract.getTokenRate(process.env.REACT_APP_ADDRESS_TOKEN_Y);
+            setRateY(rateY.value * (10 ** (-1 * rateY.decimal)));
+        }catch (e) {
+            setErrorMessage(e.message);
+        }
+
     }, []);
 
     useEffect(() => {
@@ -52,7 +56,7 @@ function App() {
     }, [fromToken, toToken]);
 
     useEffect(async () => {
-        if (!loading){
+        if (!loading) {
             await handleConnectWallet();
         }
     }, [loading])
@@ -64,7 +68,6 @@ function App() {
         }
         const provider = new ethers.providers.Web3Provider(window.ethereum)
         const [userAddress] = await window.ethereum.request({method: 'eth_requestAccounts'});
-        console.log(userAddress);
         const balance = await provider.getBalance(userAddress);
         const ethFormat = ethers.utils.formatEther(balance)
         setCurrentAccount({address: userAddress, balanceETH: ethFormat});
@@ -79,39 +82,41 @@ function App() {
             await window.ethereum.request({method: 'eth_requestAccounts'});
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
-            const simpleExchangeContract = new ethers.Contract(ADDRESS_SIMPLE_EXCHANGE, SimpleExchangeContract.abi, signer);
-
+            const simpleExchangeContract = new ethers.Contract( process.env.REACT_APP_ADDRESS_SIMPLE_EXCHANGE, SimpleExchangeContract.abi, signer);
             if (fromToken.abbr === 'ETH') {
                 // Incase: from ETH to tokens
                 await simpleExchangeContract.connect(signer)
                     .ethToToken(toToken.address, {value: ethers.utils.parseEther(fromAmount).toString()});
             } else if (toToken.abbr === 'ETH') {
-                const tokenContract = new ethers.Contract(fromToken.abbr === 'TXX' ? ADDRESS_TOKEN_X : ADDRESS_TOKEN_Y, TokenContract.abi, provider);
+                const tokenContract = new ethers.Contract(fromToken.abbr === 'TXX' ?  process.env.REACT_APP_ADDRESS_TOKEN_X :  process.env.REACT_APP_ADDRESS_TOKEN_Y, TokenContract.abi, provider);
                 await tokenContract.connect(signer).approve(simpleExchangeContract.address, ethers.utils.parseEther(fromAmount).toString());
                 await simpleExchangeContract.connect(signer)
                     .tokenToETH(fromToken.address, ethers.utils.parseEther(fromAmount).toString());
             } else {
-                const tokenContract = new ethers.Contract(fromToken.abbr === 'TXX' ? ADDRESS_TOKEN_X : ADDRESS_TOKEN_Y, TokenContract.abi, provider);
+                const tokenContract = new ethers.Contract(fromToken.abbr === 'TXX' ?  process.env.REACT_APP_ADDRESS_TOKEN_X :  process.env.REACT_APP_ADDRESS_TOKEN_Y, TokenContract.abi, provider);
                 await tokenContract.connect(signer).approve(simpleExchangeContract.address, ethers.utils.parseEther(fromAmount).toString());
                 await simpleExchangeContract.connect(signer)
                     .tokenToTokenSwap(fromToken.address, toToken.address, ethers.utils.parseEther(fromAmount).toString());
             }
         } catch (e) {
-            debugger;
             if (e.body && JSON.parse(e.body)) {
                 const err = JSON.parse(e.body);
                 setErrorMessage(err.error.message);
             } else {
+                console.error(e)
                 setErrorMessage(e.message);
             }
-        }finally
-        {
+        } finally {
             setLoading(false);
         }
     };
     //TODO: refactor
     const calculateToAmount = (valueFrom) => {
         if (valueFrom === 0) return 0;
+        if ( !rateX || !rateY) {
+            setErrorMessage('Rate is invalid')
+            return 0;
+        }
         if (fromToken.abbr === 'ETH') {
             if (toToken.abbr === 'TXX') {
                 return valueFrom / rateX;
@@ -258,7 +263,8 @@ function App() {
                     <div>
                         {
                             currentAccount.address ?
-                                <button className="swap-button" disabled={loading} onClick={!loading ? handleSwap: null}> {loading ? 'SENDING' : 'SWAP'}</button>
+                                <button className="swap-button" disabled={loading}
+                                        onClick={!loading ? handleSwap : null}> {loading ? 'SENDING' : 'SWAP'}</button>
                                 :
                                 <button className="swap-button" onClick={handleConnectWallet}> Connect Wallet</button>
                         }
@@ -271,10 +277,12 @@ function App() {
                             <label style={{color: 'red'}}> {errorMessage}</label> : ''
                     }
                 </div>
+                <TestRepstenInfo/>
             </div>
         </div>
 
         <div className="background-page"/>
+
     </>
 }
 

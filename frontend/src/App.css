@@ -9,7 +9,7 @@ svg{
 }
 .swap{
   position: relative;
-  max-width: 480px;
+  max-width: 540px;
   width: 100%;
   background: rgb(25, 27, 31);
   border-radius: 24px;
@@ -231,4 +231,11 @@ svg{
   min-width: 0px;
   font-weight: 300;
   font-size: 12px;
+}
+.test-resten-info{
+  margin-top: 24px;
+}
+.test-resten-info div,th,td {
+  color: white !important;
+  word-break: break-all;
 }

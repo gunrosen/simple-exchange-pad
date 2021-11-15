@@ -24,14 +24,14 @@ module.exports = {
     paths: {
         artifacts: '../../frontend/src/artifacts',
     },
-    defaultNetwork: "ropsten",
+    defaultNetwork: "hardhat",
     networks: {
         hardhat: {
             chainId: 1337,
             accounts: {
                 accountsBalance: utils.parseEther("10").toString(),
             },
-            gasPrice: 1000,
+            gasPrice: 0,
             initialBaseFeePerGas: 0
         },
         ropsten: {

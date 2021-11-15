@@ -6,11 +6,6 @@ export const XImage = "https://gemini.com/images/currencies/icons/default/zrx.sv
 
 export const YImage= "https://gemini.com/images/currencies/icons/default/1inch.svg"
 
-export const ADDRESS_TOKEN_X = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-export const ADDRESS_TOKEN_Y = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
-export const ADDRESS_SIMPLE_EXCHANGE = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
-export const USER_PRIVATE_KEY = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d";
-
 export const Coins = [
     {
         name: "Ether",
@@ -21,13 +16,13 @@ export const Coins = [
     {
         name: "Token X",
         abbr: "TXX",
-        address: ADDRESS_TOKEN_X,
+        address:  process.env.ADDRESS_TOKEN_X,
         image: XImage
     },
     {
         name: "Token Y",
         abbr: "TYY",
-        address: ADDRESS_TOKEN_Y,
+        address:  process.env.ADDRESS_TOKEN_Y,
         image : YImage
     }
 ]
