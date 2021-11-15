@@ -1,6 +1,6 @@
 require("@nomiclabs/hardhat-waffle");
 const {expect} = require("chai");
-const { ethers } = require("hardhat");
+const { ethers, waffle } = require("hardhat");
 
 const toWei = (value) => ethers.utils.parseEther(value.toString());
 
@@ -34,9 +34,6 @@ describe("Simple Exchange", () => {
         const SimpleExchange = await ethers.getContractFactory("SimpleExchange");
         simpleExchange = await SimpleExchange.deploy();
         await simpleExchange.deployed();
-
-        // Send Ethers to DEX contract
-        await simpleExchange.receiveEth({ value: toWei(100) });
     });
 
     it("is deployed", async () => {
@@ -69,12 +66,17 @@ describe("Simple Exchange", () => {
 
         describe("DEX exchange", async () => {
             beforeEach(async () => {
-                await simpleExchange.upsertTokenRate(token.address, 25, 5);
                 await token.transfer(user.address, toWei(400));
                 await token.transfer(simpleExchange.address, toWei(400));
 
                 await tokenY.transfer(user.address, toWei(400));
                 await tokenY.transfer(simpleExchange.address, toWei(400));
+
+                // Owner send Ethers to DEX contract: 5 ETH
+                const provider = waffle.provider;
+                const balance0ETH = await provider.getBalance(owner.address);
+                console.log("owner ETH: ", ethers.utils.formatEther(balance0ETH));
+                await simpleExchange.receiveEth({ value: toWei(5) });
             })
 
             it("DEX setup OK", async () => {
@@ -89,25 +91,27 @@ describe("Simple Exchange", () => {
 
             describe("user exchange token to ETH", async () => {
                 it("10 tokens will equal 0.0025 ETH", async ()=>{
+                    await simpleExchange.upsertTokenRate(token.address, 25, 5);
                     await token.connect(user).approve(simpleExchange.address, toWei(10));
                     await simpleExchange.connect(user).tokenToETH(token.address, toWei(10));
                     expect(await token.balanceOf(owner.address)).to.equal(toWei(200));
                     expect(await token.balanceOf(simpleExchange.address)).to.equal(toWei(410));
                     expect(await token.balanceOf(user.address)).to.equal(toWei(390));
 
-                    expect(await getBalance(simpleExchange.address)).to.equal(toWei(100 - 0.0025))
+                    expect(await getBalance(simpleExchange.address)).to.equal(toWei(5 - 0.0025))
                 })
             })
 
             describe("user exchange ETH to token", async () => {
                 it("0.012 ETH will equal 48 token", async ()=> {
+                    await simpleExchange.upsertTokenRate(token.address, 25, 5);
                     await simpleExchange.connect(user).ethToToken(token.address , {value: toWei(0.012)});
 
                     expect(await token.balanceOf(owner.address)).to.equal(toWei(200));
                     expect(await token.balanceOf(simpleExchange.address)).to.equal(toWei(400 - 48));
                     expect(await token.balanceOf(user.address)).to.equal(toWei(400 + 48));
 
-                    expect(await getBalance(simpleExchange.address)).to.equal(toWei(100 + 0.012));
+                    expect(await getBalance(simpleExchange.address)).to.equal(toWei(5 + 0.012));
                 })
             })
 
@@ -138,6 +142,9 @@ describe("Simple Exchange", () => {
                     expect(await token.balanceOf(user.address)).to.equal(toWei(200));
 
                     expect(await tokenY.balanceOf(owner.address)).to.equal(toWei(200));
+                    expect(await tokenY.balanceOf(simpleExchange.address)).to.be.closeTo(toWei(400 - 8.064516129032258064), 10000)
+                    expect(await tokenY.balanceOf(user.address)).to.be.closeTo(toWei(400 + 8.064516129032258064),10000)
+
                 })
             })
         });
