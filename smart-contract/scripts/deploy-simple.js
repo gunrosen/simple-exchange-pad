@@ -33,7 +33,7 @@ async function main() {
     console.log("owner address", owner.address);
     console.log("user address", user.address);
 
-    await simpleExchange.receiveEth({ value: toWei(5) });
+    await simpleExchange.receiveEth({ value: toWei(2) });
     await tokenX.connect(owner).transfer(user.address, toWei(400));
     await tokenX.connect(owner).transfer(simpleExchange.address, toWei(400));
 
