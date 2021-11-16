@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {ethers} from 'ethers';
+import {ethers, Contract} from 'ethers';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 import cloneDeep from 'lodash/cloneDeep';
@@ -35,16 +35,24 @@ function App() {
     const [errorMessage, setErrorMessage] = useState('');
     const [loading, setLoading] = useState(false);
 
+    const [signer, setSigner] = useState(null);
+    const [provider, setProvider] = useState(null);
+    const [exchangeContract, setExchangeContract] = useState(null);
 
     useEffect(async () => {
         try{
             setErrorMessage('');
-            const provider = new ethers.providers.Web3Provider(window.ethereum)
-            const simpleExchangeContract = new ethers.Contract(process.env.REACT_APP_ADDRESS_SIMPLE_EXCHANGE, SimpleExchangeContract.abi, provider);
+            const _provider = new ethers.providers.Web3Provider(window.ethereum)
+            const _signer = _provider.getSigner(0);
+            const simpleExchangeContract = new ethers.Contract(process.env.REACT_APP_ADDRESS_SIMPLE_EXCHANGE, SimpleExchangeContract.abi, _signer);
             const rateX = await simpleExchangeContract.getTokenRate(process.env.REACT_APP_ADDRESS_TOKEN_X);
             setRateX(rateX.value * (10 ** (-1 * rateX.decimal)));
             const rateY = await simpleExchangeContract.getTokenRate(process.env.REACT_APP_ADDRESS_TOKEN_Y);
             setRateY(rateY.value * (10 ** (-1 * rateY.decimal)));
+
+            setProvider(_provider);
+            setSigner(_signer);
+            setExchangeContract(simpleExchangeContract);
         }catch (e) {
             setErrorMessage(e.message);
         }
@@ -71,7 +79,6 @@ function App() {
         const balance = await provider.getBalance(userAddress);
         const ethFormat = ethers.utils.formatEther(balance)
         setCurrentAccount({address: userAddress, balanceETH: ethFormat});
-
     }
 
     const handleSwap = async (e) => {
@@ -80,22 +87,22 @@ function App() {
         setLoading(true);
         try {
             await window.ethereum.request({method: 'eth_requestAccounts'});
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const signer = provider.getSigner();
-            const simpleExchangeContract = new ethers.Contract( process.env.REACT_APP_ADDRESS_SIMPLE_EXCHANGE, SimpleExchangeContract.abi, signer);
             if (fromToken.abbr === 'ETH') {
                 // Incase: from ETH to tokens
-                await simpleExchangeContract.connect(signer)
+                const transaction = await exchangeContract.connect(signer)
                     .ethToToken(toToken.address, {value: ethers.utils.parseEther(fromAmount).toString()});
+                await transaction.wait();
             } else if (toToken.abbr === 'ETH') {
-                const tokenContract = new ethers.Contract(fromToken.abbr === 'TXX' ?  process.env.REACT_APP_ADDRESS_TOKEN_X :  process.env.REACT_APP_ADDRESS_TOKEN_Y, TokenContract.abi, provider);
-                await tokenContract.connect(signer).approve(simpleExchangeContract.address, ethers.utils.parseEther(fromAmount).toString());
-                await simpleExchangeContract.connect(signer)
+                const tokenContract = new Contract(fromToken.abbr === 'TXX' ?  process.env.REACT_APP_ADDRESS_TOKEN_X :  process.env.REACT_APP_ADDRESS_TOKEN_Y, TokenContract.abi, provider);
+                await tokenContract.connect(signer).approve(exchangeContract.address, ethers.utils.parseEther(fromAmount).toString());
+                console.log(await exchangeContract.resolvedAddress);
+                console.log(await exchangeContract.signer);
+                await exchangeContract.connect(signer)
                     .tokenToETH(fromToken.address, ethers.utils.parseEther(fromAmount).toString());
             } else {
                 const tokenContract = new ethers.Contract(fromToken.abbr === 'TXX' ?  process.env.REACT_APP_ADDRESS_TOKEN_X :  process.env.REACT_APP_ADDRESS_TOKEN_Y, TokenContract.abi, provider);
-                await tokenContract.connect(signer).approve(simpleExchangeContract.address, ethers.utils.parseEther(fromAmount).toString());
-                await simpleExchangeContract.connect(signer)
+                await tokenContract.connect(signer).approve(exchangeContract.address, ethers.utils.parseEther(fromAmount).toString());
+                await exchangeContract.connect(signer)
                     .tokenToTokenSwap(fromToken.address, toToken.address, ethers.utils.parseEther(fromAmount).toString());
             }
         } catch (e) {
@@ -103,7 +110,7 @@ function App() {
                 const err = JSON.parse(e.body);
                 setErrorMessage(err.error.message);
             } else {
-                console.error(e)
+                console.log(e)
                 setErrorMessage(e.message);
             }
         } finally {

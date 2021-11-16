@@ -9,6 +9,11 @@ const fromWei = (value) =>
     );
 
 async function main() {
+    // Init balance for user
+    const [owner, user] = await  hre.ethers.getSigners();
+    console.log("owner address", owner.address);
+    console.log("user address", user.address);
+
     const TokenX = await hre.ethers.getContractFactory("Token");
     let tokenX = await TokenX.deploy("Token-X", "TXX",toWei(1000));
     await tokenX.deployed();
@@ -27,11 +32,6 @@ async function main() {
     // Init exchanges rate
     await simpleExchange.upsertTokenRate(tokenX.address, 2,2);
     await simpleExchange.upsertTokenRate(tokenY.address, 3,1);
-
-    // Init balance for user
-    const [owner, user] = await  hre.ethers.getSigners();
-    console.log("owner address", owner.address);
-    console.log("user address", user.address);
 
     await simpleExchange.receiveEth({ value: toWei(2) });
     await tokenX.connect(owner).transfer(user.address, toWei(400));

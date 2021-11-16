@@ -16,13 +16,13 @@ export const Coins = [
     {
         name: "Token X",
         abbr: "TXX",
-        address:  process.env.ADDRESS_TOKEN_X,
+        address:  process.env.REACT_APP_ADDRESS_TOKEN_X,
         image: XImage
     },
     {
         name: "Token Y",
         abbr: "TYY",
-        address:  process.env.ADDRESS_TOKEN_Y,
+        address:  process.env.REACT_APP_ADDRESS_TOKEN_Y,
         image : YImage
     }
 ]
