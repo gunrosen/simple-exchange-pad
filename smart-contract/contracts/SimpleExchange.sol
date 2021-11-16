@@ -28,7 +28,7 @@ contract SimpleExchange is Ownable {
     function upsertTokenRate(address _tokenAddress, uint256 _value, uint256 _decimal) public onlyOwner {
         require(_tokenAddress != address(0), "SimpleExchange: address of token not valid");
         require(_value > 0, "SimpleExchange: _value must greater than zero");
-        require(_decimal > 0, "SimpleExchange: _decimal must greater than zero");
+        require(_decimal >= 0, "SimpleExchange: _decimal must greater than zero");
         tokenRate[_tokenAddress] = Rate({value : _value, decimal : _decimal});
     }
 
