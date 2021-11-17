@@ -7,6 +7,56 @@ svg{
 #root{
   background-color: rgb(33, 36, 41);
 }
+.nav.nav-tabs{
+  border: none;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  background-color: rgb(25, 27, 31);
+  border: 1px solid rgb(44, 47, 54);
+  box-shadow: rgb(0 0 0 / 2%) 0px 6px 10px;
+}
+.nav-items{
+  background-color: rgb(25, 27, 31);
+  border: 1px solid rgb(44, 47, 54);
+  box-shadow: rgb(0 0 0 / 2%) 0px 6px 10px;
+  width: fit-content;
+  padding: 4px;
+  border-radius: 16px;
+  display: grid;
+  grid-auto-flow: column;
+  gap: 10px;
+  overflow: auto;
+  -webkit-box-align: center;
+  align-items: center;
+
+}
+.nav-item{
+  display: inline-block;
+  outline: none;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 1rem;
+  padding: 4px 6px;
+  word-break: break-word;
+  white-space: nowrap;
+  border-radius: 12px;
+  font-weight: 600;
+  color: white;
+  text-align: center;
+}
+.nav-item > a.active {
+  background-color: rgb(44, 47, 54);
+}
+.nav-link{
+  padding: 4px 6px;
+  color: white;
+  border-radius: 2px;
+  background-color: transparent !important;
+}
+.nav-link.active{
+  background-color: rgb(44, 47, 54) !important;
+}
 .swap{
   position: relative;
   max-width: 540px;
@@ -238,4 +288,57 @@ svg{
 .test-resten-info div,th,td {
   color: white !important;
   word-break: break-all;
+}
+.admin-page div,th,td{
+  color: white !important;
+  word-break: break-all;
+}
+.admin-page{
+  max-width: 540px;
+  width: 100%;
+  background: rgb(25, 27, 31);
+  border-radius: 24px;
+  margin-top: 10rem;
+  margin-left: auto;
+  margin-right: auto;
+  z-index: 1;
+  padding: 1rem 0.5rem;
+}
+.admin-page__rate{
+  width: 100%;
+  display: flex;
+  justify-content:center;
+  margin: 0.5rem;
+}
+.admin-page__rate-input{
+  margin-left: 1rem;
+  margin-right: 0.5rem;
+}
+.admin-page__rate-swap{
+  background-color: rgba(21, 61, 111, 0.44);
+  color: rgb(80, 144, 234);
+  width: 100px;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 4px 8px;
+  text-align: center;
+  border-radius: 4px;
+  outline: none;
+  border: 1px solid transparent;
+  text-decoration: none;
+  display: flex;
+  -webkit-box-pack: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  -webkit-box-align: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  will-change: transform;
+  transition: transform 450ms ease 0s;
+  transform: perspective(1px) translateZ(0px);
+}
+.admin-page__rate-swap:hover{
+  border: 1px solid #ffffff1d;
 }
