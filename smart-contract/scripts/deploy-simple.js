@@ -11,23 +11,27 @@ const fromWei = (value) =>
 async function main() {
     // Init balance for user
     const [owner, user] = await  hre.ethers.getSigners();
-    console.log("owner address", owner.address);
-    console.log("user address", user.address);
 
     const TokenX = await hre.ethers.getContractFactory("Token");
     let tokenX = await TokenX.deploy("Token-X", "TXX",toWei(1000));
     await tokenX.deployed();
-    console.log("tokenX deployed to:", tokenX.address);
 
     const TokenY = await hre.ethers.getContractFactory("Token");
     let tokenY = await TokenY.deploy("Token-Y", "TYY", toWei(1000));
     await tokenY.deployed();
-    console.log("tokenY deployed to:", tokenY.address);
 
     const SimpleExchange = await hre.ethers.getContractFactory("SimpleExchange");
     const simpleExchange = await SimpleExchange.deploy();
     await simpleExchange.deployed();
-    console.log("SimpleExchange deployed to:", simpleExchange.address);
+
+    // LOGING
+    console.log("REACT_APP_ADDRESS_TOKEN_X="+tokenX.address);
+    console.log("REACT_APP_ADDRESS_TOKEN_Y="+tokenY.address);
+    console.log("REACT_APP_ADDRESS_SIMPLE_EXCHANGE="+simpleExchange.address);
+    console.log("REACT_APP_USER_TEST="+user.address);
+    console.log("REACT_APP_OWNER="+owner.address);
+    console.log("REACT_APP_PRIVATE_KEY_USER_TEST=","XXXX");
+    console.log("REACT_APP_PRIVATE_KEY_OWNER=","XXXX");
 
     // Init exchanges rate
     await simpleExchange.upsertTokenRate(tokenX.address, 2,2);
